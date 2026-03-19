@@ -81,3 +81,6 @@
 
 (defn submit-story [title & {:keys [url text]}]
   (web/submit-story title :url url :text text))
+
+(defn list-replies []
+  (web/list-replies))

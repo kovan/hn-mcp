@@ -54,7 +54,11 @@
                                      :description "URL to submit (mutually exclusive with text)"}
                                :text {:type "string"
                                       :description "Text for Ask HN / text posts (mutually exclusive with url)"}}
-                  :required ["title"]}}])
+                  :required ["title"]}}
+   {:name "list_replies"
+    :description "List replies to your comments on Hacker News. Shows recent responses from other users."
+    :inputSchema {:type "object"
+                  :properties {}}}])
 
 (defn- respond [id result]
   {:jsonrpc "2.0" :id id :result result})
@@ -77,7 +81,12 @@
   (respond id {:tools tools}))
 
 (defn- clamp-n [args]
-  (let [n (or (:n args) 30)]
+  (let [raw (:n args)
+        n (cond
+            (nil? raw) 30
+            (number? raw) (int raw)
+            (string? raw) (or (parse-long raw) 30)
+            :else 30)]
     (min (max n 1) 100)))
 
 (defn- handle-tools-call [id {:keys [name arguments]}]
@@ -93,6 +102,7 @@
                    "submit_story"      (forum/submit-story (:title arguments)
                                          :url (:url arguments)
                                          :text (:text arguments))
+                   "list_replies"      (forum/list-replies)
                    (throw (ex-info (str "Unknown tool: " name) {})))]
       (respond id (tool-result result)))
     (catch Exception e
